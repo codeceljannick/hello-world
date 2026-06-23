@@ -11,4 +11,4 @@ A simple starter project to learn the GitHub workflow with Claude Code.
 ## About
 
 This project was created as a first step into open-source collaboration.
-It demonstrates the basic GitHub workflow: branching, commiting, and pull requests.
+It demonstrates the basic GitHub workflow: branching, committing, and pull requests.
