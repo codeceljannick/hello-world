@@ -127,10 +127,12 @@ function makeSpring(pivot, squashMeshes, opts = {}) {
 /*  Materials                                                           */
 /* ------------------------------------------------------------------ */
 
-const SKIN = 0xe3ad82;
-const HAIR = 0x4a3728;
-const JACKET = 0x232a35;
-const JACKET_DARK = 0x171c24;
+const SKIN = 0xe8b58c;
+const HAIR = 0x8a6f4d;
+const HAIR_DARK = 0x6e5740;
+const HOODIE = 0x494e57;
+const HOODIE_DARK = 0x34383f;
+const METAL = 0xb8bcc2;
 const JEANS = 0x45566e;
 const SHOE = 0x1c1c1e;
 
@@ -144,60 +146,11 @@ function stdMat(color, extra = {}) {
   });
 }
 
-/* Simple canvas face texture */
-function makeFaceTexture() {
-  const c = document.createElement("canvas");
-  c.width = 128;
-  c.height = 128;
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = "#e3ad82";
-  ctx.fillRect(0, 0, 128, 128);
-
-  // eyes
-  ctx.fillStyle = "#2a2a2a";
-  ctx.beginPath();
-  ctx.ellipse(42, 58, 7, 9, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(86, 58, 7, 9, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // eyebrows
-  ctx.strokeStyle = "#5b4230";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(32, 42);
-  ctx.lineTo(52, 40);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(76, 40);
-  ctx.lineTo(96, 42);
-  ctx.stroke();
-
-  // nose
-  ctx.strokeStyle = "#c88f63";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(64, 60);
-  ctx.lineTo(60, 78);
-  ctx.lineTo(68, 80);
-  ctx.stroke();
-
-  // mouth - gentle smirk
-  ctx.strokeStyle = "#7a4030";
-  ctx.lineWidth = 4;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(46, 96);
-  ctx.quadraticCurveTo(64, 106, 84, 92);
-  ctx.stroke();
-
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
-const faceTexture = makeFaceTexture();
+/* Face texture: the actual reference photo (cropped to the face and
+   feathered into the head's skin tone at the edges) mapped onto the
+   front face of the head box, so the avatar's face matches him. */
+const faceTexture = new THREE.TextureLoader().load("./assets/avatar-face.jpg");
+faceTexture.colorSpace = THREE.SRGBColorSpace;
 
 /* ------------------------------------------------------------------ */
 /*  Bruise decals                                                       */
@@ -310,7 +263,7 @@ const torsoPivot = new THREE.Group();
 torsoPivot.position.set(0, PELVIS_H, 0);
 hips.add(torsoPivot);
 
-const torsoMesh = box(0.5, TORSO_H, 0.3, stdMat(JACKET));
+const torsoMesh = box(0.5, TORSO_H, 0.3, stdMat(HOODIE));
 torsoMesh.position.y = TORSO_H / 2;
 torsoPivot.add(torsoMesh);
 const torsoSpring = makeSpring(torsoPivot, torsoMesh, {
@@ -319,10 +272,31 @@ const torsoSpring = makeSpring(torsoPivot, torsoMesh, {
 });
 hittable.push({ mesh: torsoMesh, spring: torsoSpring, impulse: 2.1, axis: "x" });
 
-// jacket zipper detail
-const zipMesh = box(0.05, TORSO_H * 0.85, 0.02, stdMat(JACKET_DARK));
-zipMesh.position.set(0, TORSO_H / 2, 0.16);
-torsoMesh.add(zipMesh);
+// hoodie details: collar, kangaroo-pocket seam and drawstrings with
+// metal eyelet tips (matching the reference photos)
+const collarMesh = box(0.3, 0.06, 0.32, stdMat(HOODIE_DARK));
+collarMesh.position.set(0, TORSO_H - 0.02, 0);
+torsoMesh.add(collarMesh);
+
+const pocketSeam = box(0.42, 0.025, 0.02, stdMat(HOODIE_DARK));
+pocketSeam.position.set(0, TORSO_H * 0.32, 0.155);
+torsoMesh.add(pocketSeam);
+
+function drawstring(x) {
+  const cord = box(0.025, 0.22, 0.025, stdMat(HOODIE_DARK));
+  cord.position.set(x, TORSO_H - 0.16, 0.155);
+  torsoMesh.add(cord);
+  const tip = box(0.045, 0.05, 0.045, stdMat(METAL, { roughness: 0.4, metalness: 0.6 }));
+  tip.position.set(x, TORSO_H - 0.27, 0.155);
+  torsoMesh.add(tip);
+}
+drawstring(-0.07);
+drawstring(0.07);
+
+// bunched-up hood resting on the upper back
+const hoodMesh = box(0.4, 0.22, 0.22, stdMat(HOODIE_DARK));
+hoodMesh.position.set(0, TORSO_H - 0.05, -0.19);
+torsoMesh.add(hoodMesh);
 
 /* Head pivot */
 const headPivot = new THREE.Group();
@@ -351,15 +325,46 @@ const headSpring = makeSpring(headPivot, headMesh, {
 });
 hittable.push({ mesh: headMesh, spring: headSpring, impulse: 2.6, axis: "x" });
 
-// hair - top cap
-const hairTop = box(HEAD_S * 1.05, HEAD_S * 0.32, HEAD_S * 1.05, stdMat(HAIR));
-hairTop.position.set(0, HEAD_S * 0.92, -0.01);
-headMesh.add(hairTop);
-// hair - front fringe
-const hairFringe = box(HEAD_S * 1.02, HEAD_S * 0.22, HEAD_S * 0.35, stdMat(HAIR));
-hairFringe.position.set(0, HEAD_S * 0.8, HEAD_S * 0.34);
-hairFringe.rotation.x = -0.25;
-headMesh.add(hairFringe);
+/* Messy, tousled voxel hair - built from a cluster of small offset
+   boxes (instead of one flat slab) so it reads as hair, not a hat. */
+function buildHair(parent, headSize) {
+  const hh = headSize / 2; // head half-extent
+  const hairMat = stdMat(HAIR);
+  const hairMatDark = stdMat(HAIR_DARK);
+
+  function tuft(w, h, d, x, y, z, rz = 0, rx = 0, dark = false) {
+    const m = box(w, h, d, dark ? hairMatDark : hairMat);
+    m.position.set(x, y, z);
+    m.rotation.set(rx, 0, rz);
+    parent.add(m);
+    return m;
+  }
+
+  // base cap covering the crown + back of the head, overlapping down to
+  // just above the eyebrows so there's no gap and no hat-like floating
+  const capH = headSize * 0.42;
+  const capCenterY = hh - capH / 2 + 0.03;
+  const capTopY = capCenterY + capH / 2; // top surface of the cap
+  tuft(headSize * 1.06, capH, headSize * 1.03, 0, capCenterY, -0.01);
+
+  // side coverage over the upper ears
+  tuft(headSize * 0.14, headSize * 0.36, headSize * 0.58, -hh - 0.015, hh * 0.3, 0.01);
+  tuft(headSize * 0.14, headSize * 0.36, headSize * 0.58, hh + 0.015, hh * 0.3, 0.01);
+
+  // tousled tufts sitting flush on top of the cap (small overlap so
+  // there's no floating gap), gentle angles for texture without
+  // reading as spikes
+  tuft(0.13, 0.09, 0.13, -0.09, capTopY + 0.045 - 0.02, -0.03, 0.22, -0.1);
+  tuft(0.11, 0.08, 0.12, 0.08, capTopY + 0.04 - 0.02, 0.03, -0.24, 0.08);
+  tuft(0.13, 0.08, 0.11, 0.0, capTopY + 0.04 - 0.02, -0.11, 0.08, 0.15, true);
+
+  // short swept fringe right at the hairline, tilted slightly to one
+  // side - stays above the eyebrows instead of covering the eyes
+  tuft(headSize * 0.6, headSize * 0.16, headSize * 0.24, -0.04, hh * 0.82, hh + 0.03, 0.1, -0.12);
+  tuft(headSize * 0.26, headSize * 0.12, headSize * 0.2, hh * 0.45, hh * 0.88, hh + 0.01, -0.16, -0.1);
+}
+
+buildHair(headMesh, HEAD_S);
 
 /* Arms */
 function buildArm(side) {
@@ -368,7 +373,7 @@ function buildArm(side) {
   shoulder.position.set(sign * (0.25 + ARM_GAP / 2), TORSO_H - 0.06, 0);
   torsoPivot.add(shoulder);
 
-  const upperArmMesh = box(0.16, UPPER_ARM, 0.16, stdMat(JACKET));
+  const upperArmMesh = box(0.16, UPPER_ARM, 0.16, stdMat(HOODIE));
   upperArmMesh.position.y = -UPPER_ARM / 2;
   shoulder.add(upperArmMesh);
   const shoulderSpring = makeSpring(shoulder, upperArmMesh, {
