@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>🥊 Watsch-o-mat</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥊</text></svg>" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="ui">
+    <div id="titleBar">
+      <h1>🥊 Watsch-o-mat</h1>
+      <p>Klick auf den Avatar, um zuzuschlagen. Manchmal hat er was zu sagen&hellip;</p>
+    </div>
+    <div id="topRight">
+      <button id="muteBtn" title="Ton an/aus">🔊</button>
+      <button id="resetBtn" title="Avatar zurücksetzen">🔄 Zurücksetzen</button>
+    </div>
+    <div id="hitCounter">Treffer: <span id="hitCount">0</span></div>
+  </div>
+
+  <div id="speechBubble" class="hidden">
+    <span id="speechText"></span>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/build/three.module.js",
+      "three/addons/": "./vendor/three/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

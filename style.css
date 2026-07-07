@@ -1,0 +1,141 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #0b0f16;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  cursor: grab;
+}
+
+#app.dragging {
+  cursor: grabbing;
+}
+
+#app canvas {
+  display: block;
+  touch-action: none;
+}
+
+#ui {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#titleBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  text-align: center;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0));
+  color: #fff;
+}
+
+#titleBar h1 {
+  margin: 0 0 4px 0;
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+
+#titleBar p {
+  margin: 0;
+  font-size: clamp(0.75rem, 2vw, 0.95rem);
+  opacity: 0.85;
+}
+
+#topRight {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+#muteBtn, #resetBtn {
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(20, 22, 30, 0.65);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+
+#muteBtn:hover, #resetBtn:hover {
+  background: rgba(40, 44, 58, 0.85);
+}
+
+#muteBtn:active, #resetBtn:active {
+  transform: scale(0.94);
+}
+
+#hitCounter {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  color: #fff;
+  background: rgba(20, 22, 30, 0.55);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+#speechBubble {
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -100%);
+  max-width: 240px;
+  background: #fff;
+  color: #1a1a1a;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 20;
+  pointer-events: none;
+}
+
+#speechBubble::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px 8px 0 8px;
+  border-style: solid;
+  border-color: #fff transparent transparent transparent;
+}
+
+#speechBubble.visible {
+  opacity: 1;
+}
+
+#speechBubble.hidden {
+  opacity: 0;
+}
