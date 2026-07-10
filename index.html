@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmcraft Idle</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='6' y='2' width='2' height='2' fill='%233fd67f'/%3E%3Crect x='4' y='4' width='2' height='2' fill='%233fd67f'/%3E%3Crect x='6' y='4' width='4' height='2' fill='%2320a05a'/%3E%3Crect x='10' y='4' width='2' height='2' fill='%233fd67f'/%3E%3Crect x='3' y='6' width='10' height='2' fill='%2320a05a'/%3E%3Crect x='3' y='8' width='10' height='2' fill='%230f6b38'/%3E%3Crect x='4' y='10' width='8' height='2' fill='%2320a05a'/%3E%3Crect x='5' y='12' width='6' height='2' fill='%230f6b38'/%3E%3Crect x='7' y='14' width='2' height='1' fill='%230f6b38'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="toast"></div>
+
+  <header id="header">
+    <h1>Farmcraft <span>Idle</span></h1>
+    <div id="currency">
+      <img id="emerald-icon" alt="Smaragde">
+      <span id="emerald-count">0</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel" id="farm-section">
+      <h2>Acker</h2>
+      <div id="farm-grid"></div>
+    </section>
+
+    <section class="panel" id="animal-section">
+      <h2>Tiere</h2>
+      <div id="animal-pens"></div>
+    </section>
+
+    <aside class="panel" id="shop-section">
+      <h2>Shop — Saatgut</h2>
+      <div id="seed-shop"></div>
+      <p class="hint">Wähle eine Saat aus und klicke auf ein freies Feld im Acker, um zu pflanzen. Gesperrte Felder kaufst du per Klick.</p>
+    </aside>
+  </main>
+
+  <footer id="inventory-footer">
+    <div id="inventory-bar"></div>
+    <div id="footer-actions">
+      <button id="autosell-toggle" class="btn"></button>
+      <button id="sell-all" class="btn buy">Alles verkaufen</button>
+    </div>
+  </footer>
+
+  <script src="js/textures.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
