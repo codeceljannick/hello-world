@@ -22,7 +22,36 @@ const ANIMALS = {
 const FIELD_BASE_PRICE = 12;
 const FIELD_PRICE_GROWTH = 1.6;
 const ANIMAL_PRICE_GROWTH = 1.35;
-const TOTAL_PLOTS = 16; // 4x4 grid, some locked at start
+const GRID_COLS = 4;
+const GRID_ROWS = 4;
+const TOTAL_PLOTS = GRID_COLS * GRID_ROWS; // 4x4 grid, some locked at start
+
+// Isometric tile geometry. The cube textures from Textures.iso*() are
+// 32x32 canvases (2:1 top rhombus + side faces) displayed at 3x scale.
+const TILE_W = 96;
+const TILE_TOP_H = 48;
+const TILE_STEP_X = TILE_W / 2;
+const TILE_STEP_Y = TILE_TOP_H / 2;
+// Anchor point (from top-left of the tile box) where a standing crop/animal
+// sprite's feet should rest — the geometric center of the cube's top face.
+const TILE_ANCHOR_X = TILE_W / 2;
+const TILE_ANCHOR_Y = TILE_TOP_H / 2;
+
+function isoPosition(col, row) {
+  const offsetX = (GRID_ROWS - 1) * TILE_STEP_X;
+  return {
+    left: offsetX + (col - row) * TILE_STEP_X,
+    top: (col + row) * TILE_STEP_Y,
+    z: col + row,
+  };
+}
+
+function isoGridSize() {
+  return {
+    width: (GRID_ROWS - 1) * TILE_STEP_X + (GRID_COLS - 1) * TILE_STEP_X + TILE_W,
+    height: (GRID_COLS - 1) * TILE_STEP_Y + (GRID_ROWS - 1) * TILE_STEP_Y + TILE_W,
+  };
+}
 
 function defaultState() {
   const plots = [];
@@ -251,45 +280,69 @@ function img(src, alt = "") {
   return `<img src="${src}" alt="${alt}" draggable="false">`;
 }
 
+// The background cube image is wrapped in a hexagon clip-path matching the
+// cube's actual silhouette (top rhombus + two side faces). Adjacent iso
+// tiles' rectangular bounding boxes overlap heavily, so without this, clicks
+// meant for one tile are stolen by an overlapping neighbour with a higher
+// z-index; clipping to the true visible shape fixes hit-testing.
+function hitImg(src, alt = "") {
+  return `<div class="iso-hit">${img(src, alt)}</div>`;
+}
+
 function renderHeader() {
   document.getElementById("emerald-count").textContent = state.emeralds;
   document.getElementById("emerald-icon").src = Textures.emerald();
 }
 
+function cropTexture(type, stage) {
+  if (type === "wheat") return Textures.wheat(stage);
+  if (type === "carrot") return Textures.carrot(stage);
+  return Textures.potato(stage);
+}
+
 function renderPlots() {
   const grid = document.getElementById("farm-grid");
   grid.innerHTML = "";
+  const size = isoGridSize();
+  grid.style.width = `${size.width}px`;
+  grid.style.height = `${size.height}px`;
+
   state.plots.forEach((plot, i) => {
+    const col = i % GRID_COLS;
+    const row = Math.floor(i / GRID_COLS);
+    const pos = isoPosition(col, row);
+
     const cell = document.createElement("div");
-    cell.className = "plot";
+    cell.className = "iso-tile plot";
+    cell.style.left = `${pos.left}px`;
+    cell.style.top = `${pos.top}px`;
+    cell.style.zIndex = String(pos.z);
+
     if (!plot.unlocked) {
       cell.classList.add("locked");
-      cell.style.backgroundImage = `url(${Textures.grass()})`;
       cell.innerHTML = `
-        <div class="locked-overlay">
+        ${hitImg(Textures.isoGrass(), "gesperrt")}
+        <div class="iso-standee locked-overlay">
           ${img(Textures.lockIcon())}
           <div class="price">${fieldPrice(i)}${img(Textures.emerald(), "emerald")}</div>
         </div>`;
+      cell.title = `Feld freischalten — ${fieldPrice(i)} Smaragde`;
     } else if (!plot.crop) {
-      cell.style.backgroundImage = `url(${Textures.farmland(false)})`;
+      cell.innerHTML = hitImg(Textures.isoFarmland(false), "Acker");
       cell.classList.add("empty");
       cell.title = "Klicken zum Pflanzen";
     } else {
       const def = CROPS[plot.crop.type];
       const stage = cropStage(plot);
       const ready = isReady(plot);
-      cell.style.backgroundImage = `url(${Textures.farmland(true)})`;
       cell.classList.add("planted");
       if (ready) cell.classList.add("ready");
-      const cropTex =
-        plot.crop.type === "wheat"
-          ? Textures.wheat(stage)
-          : plot.crop.type === "carrot"
-          ? Textures.carrot(stage)
-          : Textures.potato(stage);
-      cell.innerHTML = `<div class="crop-layer">${img(cropTex, def.name)}</div>${
-        ready ? '<div class="ready-badge">✓</div>' : ""
-      }`;
+      cell.innerHTML = `
+        ${hitImg(Textures.isoFarmland(true), "Acker")}
+        <div class="iso-standee crop-layer">
+          ${img(cropTexture(plot.crop.type, stage), def.name)}
+          ${ready ? '<div class="ready-badge">✓</div>' : ""}
+        </div>`;
       cell.title = ready ? `${def.name} ernten!` : `${def.name} wächst...`;
     }
     cell.addEventListener("click", () => onPlotClick(i));
@@ -305,12 +358,13 @@ function renderAnimals() {
     const ready = readyCount(kind);
     const price = animalPrice(kind);
     const tex = kind === "sheep" ? Textures.sheep() : kind === "cow" ? Textures.cow() : Textures.pufferfish();
-    const bgTex = kind === "pufferfish" ? Textures.water() : Textures.grass();
+    const bgTex = kind === "pufferfish" ? Textures.isoWater() : Textures.isoGrass();
     const pen = document.createElement("div");
     pen.className = "pen";
     pen.innerHTML = `
-      <div class="pen-visual" style="background-image:url(${bgTex})">
-        ${count > 0 ? img(tex, def.name) : `<div class="pen-empty">${img(Textures.lockIcon())}</div>`}
+      <div class="pen-visual iso-tile">
+        ${img(bgTex, "")}
+        ${count > 0 ? `<div class="iso-standee pen-animal">${img(tex, def.name)}</div>` : `<div class="pen-empty">${img(Textures.lockIcon())}</div>`}
         ${ready > 0 ? `<div class="pen-ready-badge">+${ready}</div>` : ""}
       </div>
       <div class="pen-info">
